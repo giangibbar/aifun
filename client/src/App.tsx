@@ -104,10 +104,10 @@ function AppContent() {
 
   // Main app layout
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 h-full flex flex-col overflow-hidden">
 
       {/* Tab navigation */}
-      <div className="flex gap-1 bg-white rounded-lg shadow p-1">
+      <div className="flex gap-1 bg-white rounded-lg shadow p-1 shrink-0">
         {[
           { id: 'map' as const, label: '🗺️ Mappa & Eventi' },
           { id: 'chat' as const, label: '✨ Assistente' },
@@ -130,10 +130,10 @@ function AppContent() {
       {/* Tab content */}
       {activeTab === "map" && (
         <>
-        <div className="bg-white rounded-lg shadow p-3 flex items-center gap-4 mb-3"><AddressInput inline /></div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
+        <div className="bg-white rounded-lg shadow p-3 flex items-center gap-4 mb-3 shrink-0"><AddressInput inline /></div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 flex-1 min-h-0">
           {/* Map */}
-          <div className="lg:col-span-2 h-[calc(100vh-200px)]">
+          <div className="lg:col-span-2 h-full min-h-0">
             <MapView
               lat={lat}
               lng={lng}
@@ -146,7 +146,7 @@ function AppContent() {
           </div>
 
           {/* Event list or detail */}
-          <div className="space-y-3 h-[calc(100vh-200px)] flex flex-col">
+          <div className="space-y-3 h-full flex flex-col min-h-0">
             <EventFilters filters={filters} onChange={setFilters} radius={radiusKm} onRadiusChange={setRadiusKm} onSearch={doSearch} />
 
                 <p className="text-sm text-gray-500">

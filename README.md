@@ -157,7 +157,7 @@ aifun/
 
 ### Eventbrite
 - Raggio ≤30km: cerca per nome città (`/d/italy--genova/events/`)
-- Raggio >30km: cerca per coordinate (`?loc=44.4,8.9&distance=100km`)
+- Raggio >30km: cerca per città + coordinate (unisce i risultati)
 - Estrae JSON-LD (`__SERVER_DATA__`) dalla pagina
 - Filtra per distanza reale (haversine)
 

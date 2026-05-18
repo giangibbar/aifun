@@ -10,27 +10,32 @@ export class EventbriteService {
   async searchByLocation(lat: number, lng: number, radiusKm: number): Promise<Event[]> {
     // Get city name for local search
     const city = await this.getCityName(lat, lng);
-    let url: string;
-    if (radiusKm > 30 && city) {
-      url = `https://www.eventbrite.it/d/italy/events/?loc=${lat}%2C${lng}&distance=${radiusKm}km`;
-    } else if (city) {
-      url = `https://www.eventbrite.it/d/italy--${encodeURIComponent(city)}/events/`;
-    } else {
-      url = `https://www.eventbrite.it/d/italy/events/?loc=${lat}%2C${lng}&distance=${radiusKm}km`;
-    }
+    // Always search by city for local events
+    const urls: string[] = [];
+    if (city) urls.push("https://www.eventbrite.it/d/italy--" + encodeURIComponent(city) + "/events/");
+    // For large radius, also search by coordinates
+    if (radiusKm > 30) urls.push("https://www.eventbrite.it/d/italy/events/?loc=" + lat + "%2C" + lng + "&distance=" + radiusKm + "km");
+    if (!urls.length) urls.push("https://www.eventbrite.it/d/italy/events/?loc=" + lat + "%2C" + lng + "&distance=" + radiusKm + "km");
+
+    const allEvents: Event[] = [];
+    const seen = new Set<string>();
+    for (const url of urls) {
 
     try {
       const res = await fetch(url, {
         headers: { "User-Agent": "Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36" },
         signal: AbortSignal.timeout(15000),
       });
-      if (!res.ok) return [];
+      if (!res.ok) continue;
       const html = await res.text();
-      return this.parseEvents(html, lat, lng);
+      const events = this.parseEvents(html, lat, lng);
+      for (const e of events) { const key = e.name + e.dateStart; if (!seen.has(key)) { seen.add(key); allEvents.push(e); } }
     } catch (err) {
       console.error("Eventbrite scrape error:", (err as Error).message);
-      return [];
+      continue;
     }
+  }
+    return allEvents;
   }
 
   private async getCityName(lat: number, lng: number): Promise<string> {
