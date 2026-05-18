@@ -1,0 +1,9 @@
+node_modules/
+dist/
+server/dist/
+server/data/
+server/data.db
+server/*.db
+server/.env
+server/telegram_config.json
+.DS_Store

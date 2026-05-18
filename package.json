@@ -1,0 +1,19 @@
+{
+  "name": "local-events-finder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local Events Finder - Webapp per scoprire eventi nella propria zona",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev:client": "npm run dev -w client",
+    "dev:server": "npm run dev -w server",
+    "build:client": "npm run build -w client",
+    "build:server": "npm run build -w server",
+    "test": "npm run test -w client && npm run test -w server",
+    "test:client": "npm run test -w client",
+    "test:server": "npm run test -w server"
+  }
+}
