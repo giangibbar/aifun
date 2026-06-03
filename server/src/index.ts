@@ -4,6 +4,7 @@
 
 import express from "express";
 import cors from "cors";
+import compression from "compression";
 import path from "path";
 import { fileURLToPath } from "url";
 import { eventsRouter } from "./routes/events.js";
@@ -20,8 +21,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
+app.use(compression());
 app.use(express.json({ limit: "1mb" }));
-app.use(express.static(path.join(__dirname, "../../client/dist")));
+app.use(express.static(path.join(__dirname, "../../client/dist"), { maxAge: "1d" }));
 
 app.use("/api/events", eventsRouter);
 app.use("/api/recommendations", recommendationsRouter);

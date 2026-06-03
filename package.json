@@ -15,5 +15,9 @@
     "test": "npm run test -w client && npm run test -w server",
     "test:client": "npm run test -w client",
     "test:server": "npm run test -w server"
+  },
+  "dependencies": {
+    "@types/compression": "^1.8.1",
+    "compression": "^1.8.1"
   }
 }
