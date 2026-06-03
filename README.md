@@ -71,6 +71,14 @@ cd server && node dist/index.js
 
 Apri **http://localhost:3001** nel browser.
 
+### Deploy Raspberry Pi 4
+
+Gira come servizio systemd su porta 3001 con:
+
+- **Gzip compression** — pagine e API compresse automaticamente
+- **Cache asset 1 giorno** — file statici (JS/CSS/immagini) serviti con `max-age`
+- **Ollama preload** — modello LLM caricato in RAM al boot per risposte istantanee
+
 ### Variabili d'ambiente (server/.env)
 
 ```env
