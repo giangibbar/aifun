@@ -4,6 +4,7 @@
  */
 
 import * as cheerio from "cheerio";
+import { geocodingService } from "./GeocodingService.js";
 import type { Event, EventCategory } from "../types/index.js";
 
 export class TodayScraperService {
@@ -11,9 +12,8 @@ export class TodayScraperService {
     const cities = await this.getCitiesInRadius(lat, lng, radiusKm);
     if (!cities.length) return [];
 
-    // Scrape all cities in parallel
     const results = await Promise.allSettled(
-      cities.slice(0, 4).map(city => this.scrapeCity(city, lat, lng))
+      cities.slice(0, 4).map(city => this.scrapeCity(city))
     );
 
     const allEvents: Event[] = [];
@@ -30,11 +30,9 @@ export class TodayScraperService {
   }
 
   private async getCitiesInRadius(lat: number, lng: number, radiusKm: number): Promise<string[]> {
-    // First get the main city
     const mainCity = await this.reverseGeocode(lat, lng);
     const cities = mainCity ? [mainCity] : [];
 
-    // For larger radii, search for other cities
     if (radiusKm > 40) {
       try {
         const degRadius = radiusKm / 111;
@@ -61,7 +59,7 @@ export class TodayScraperService {
     } catch { return ""; }
   }
 
-  private async scrapeCity(city: string, userLat: number, userLng: number): Promise<Event[]> {
+  private async scrapeCity(city: string): Promise<Event[]> {
     const slug = city.replace(/\s+/g, "");
     const baseUrl = "https://www." + slug + "today.it/eventi/";
     const today = new Date();
@@ -78,7 +76,7 @@ export class TodayScraperService {
       if (!res.ok) return [];
       const html = await res.text();
       const $ = cheerio.load(html);
-      const events: Event[] = [];
+      const rawEvents: Array<{ name: string; venue: string; url: string }> = [];
       const seen = new Set<string>();
 
       $("a[href]").each((_, el) => {
@@ -94,22 +92,45 @@ export class TodayScraperService {
         }
         if (!name || name.length < 5) return;
 
+        // Extract venue from nearby text if available
+        const venue = $(el).closest("article,.event,.evento").find(".venue,.luogo,.location,address").first().text().trim();
+        rawEvents.push({ name, venue, url: full });
+      });
+
+      // Geocode venues in batches (max 5 to respect Nominatim rate limits)
+      const events: Event[] = [];
+      const geocodeCache = new Map<string, { lat: number; lng: number }>();
+
+      for (const raw of rawEvents) {
+        const query = raw.venue || raw.name.split(/\s+a\s+|\s+@\s+|\s+-\s+/).pop() || city;
+        const cacheKey = query.toLowerCase();
+
+        let coords = geocodeCache.get(cacheKey);
+        if (!coords && geocodeCache.size < 5) {
+          try {
+            const result = await geocodingService.geocode(query + ", " + city + ", Italia");
+            if (result) { coords = result; geocodeCache.set(cacheKey, coords); }
+          } catch {}
+          // Nominatim rate limit: 1 req/sec
+          await new Promise(r => setTimeout(r, 1100));
+        }
+
         events.push({
           id: 0,
-          name,
+          name: raw.name,
           dateStart: from,
           dateEnd: to,
-          venueName: city.charAt(0).toUpperCase() + city.slice(1),
+          venueName: raw.venue || city.charAt(0).toUpperCase() + city.slice(1),
           venueAddress: "",
-          lat: userLat + (Math.random() - 0.5) * 0.01,
-          lng: userLng + (Math.random() - 0.5) * 0.01,
+          lat: coords?.lat || 0,
+          lng: coords?.lng || 0,
           description: "",
-          category: this.guessCategory(name),
-          sourceUrl: full,
+          category: this.guessCategory(raw.name),
+          sourceUrl: raw.url,
           sourceId: null as any,
           scrapedAt: new Date().toISOString(),
         });
-      });
+      }
 
       return events;
     } catch { return []; }

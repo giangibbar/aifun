@@ -28,7 +28,7 @@ export class EventbriteService {
       });
       if (!res.ok) continue;
       const html = await res.text();
-      const events = this.parseEvents(html, lat, lng);
+      const events = this.parseEvents(html);
       for (const e of events) { const key = e.name + e.dateStart; if (!seen.has(key)) { seen.add(key); allEvents.push(e); } }
     } catch (err) {
       console.error("Eventbrite scrape error:", (err as Error).message);
@@ -41,15 +41,15 @@ export class EventbriteService {
   private async getCityName(lat: number, lng: number): Promise<string> {
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=10`,
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=14`,
         { headers: { "User-Agent": "AiFun/1.0" }, signal: AbortSignal.timeout(5000) }
       );
-      const data = await res.json() as { address?: { city?: string; town?: string; municipality?: string } };
-      return data.address?.city || data.address?.town || data.address?.municipality || "";
+      const data = await res.json() as { address?: { city?: string; town?: string; village?: string; municipality?: string } };
+      return data.address?.town || data.address?.village || data.address?.city || data.address?.municipality || "";
     } catch { return ""; }
   }
 
-  private parseEvents(html: string, lat: number, lng: number): Event[] {
+  private parseEvents(html: string): Event[] {
     const $ = cheerio.load(html);
     const events: Event[] = [];
     const scripts = $("script").toArray();
@@ -64,8 +64,10 @@ export class EventbriteService {
         for (const item of jsonld) {
           const e = item.item;
           if (!e) continue;
-          const eLat = e.location?.geo?.latitude ? parseFloat(e.location.geo.latitude) : lat;
-          const eLng = e.location?.geo?.longitude ? parseFloat(e.location.geo.longitude) : lng;
+          const eLat = e.location?.geo?.latitude ? parseFloat(e.location.geo.latitude) : null;
+          const eLng = e.location?.geo?.longitude ? parseFloat(e.location.geo.longitude) : null;
+          // Skip events without coordinates — can't verify distance
+          if (eLat === null || eLng === null) continue;
           events.push({
             id: 0,
             name: e.name || "Untitled",
