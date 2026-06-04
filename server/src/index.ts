@@ -64,8 +64,8 @@ setInterval(async () => {
   }
 }, 3600000);
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.listen(Number(PORT), '127.0.0.1', () => {
+  console.log(`Server running on http://127.0.0.1:${PORT}`);
 });
 
 export default app;
