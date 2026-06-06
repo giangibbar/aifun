@@ -84,7 +84,7 @@ export interface Source {
 
 // ─── API Functions ───────────────────────────────────────────────────────────
 
-const BASE_URL = '/api';
+const BASE_URL = import.meta.env.BASE_URL + 'api';
 
 async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {

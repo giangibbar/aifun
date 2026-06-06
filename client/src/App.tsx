@@ -76,7 +76,7 @@ function AppContent() {
   // Initial load + manual search
   const addReminder = async (event: any) => {
     try {
-      await fetch("/api/reminders/add", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ eventName: event.name, eventDate: event.dateStart, sourceUrl: event.sourceUrl || "" }) });
+      await fetch(`${import.meta.env.BASE_URL}api/reminders/add`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ eventName: event.name, eventDate: event.dateStart, sourceUrl: event.sourceUrl || "" }) });
       const idx = events.findIndex(e => e.name === event.name && e.dateStart === event.dateStart);
       if (idx >= 0) setSavedEvents(prev => new Set([...prev, idx]));
     } catch {}
@@ -86,11 +86,11 @@ function AppContent() {
     const token = (document.getElementById("tg-token-input") as HTMLInputElement)?.value;
     const chatId = (document.getElementById("tg-chatid-input") as HTMLInputElement)?.value;
     if (!token || !chatId) return;
-    await fetch("/api/reminders/telegram", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, chatId }) });
+    await fetch(`${import.meta.env.BASE_URL}api/reminders/telegram`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, chatId }) });
     alert("✅ Configurazione salvata!");
   };
   const testTelegramConfig = async () => {
-    await fetch("/api/reminders/test-telegram", { method: "POST" });
+    await fetch(`${import.meta.env.BASE_URL}api/reminders/test-telegram`, { method: "POST" });
     alert("📱 Messaggio di test inviato!");
   };
 
